@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  namenode:
+    build: .
+    container_name: namenode
+    hostname: namenode
+    volumes:
+      - ./shared/namenode1:/opt/hadoop/yarn_data/hdfs/namenode
+      - ./hadoop_config:/opt/hadoop/etc/hadoop
+    networks:
+      - hadoop-net
+    ports:
+      - "9870:9870"   # HDFS NameNode UI
+      - "8088:8088"   # YARN ResourceManager UI
+
+  datanode1:
+    build: .
+    container_name: datanode1
+    hostname: datanode1
+    volumes:
+      - ./shared/datanode1:/opt/hadoop/yarn_data/hdfs/datanode
+      - ./hadoop_config:/opt/hadoop/etc/hadoop
+    networks:
+      - hadoop-net
+
+  datanode2:
+    build: .
+    container_name: datanode2
+    hostname: datanode2
+    volumes:
+      - ./shared/datanode2:/opt/hadoop/yarn_data/hdfs/datanode
+      - ./hadoop_config:/opt/hadoop/etc/hadoop
+    networks:
+      - hadoop-net
+
+
+networks:
+  hadoop-net:
+    driver: bridge
