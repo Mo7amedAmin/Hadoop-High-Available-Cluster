@@ -7,7 +7,7 @@ services:
     hostname: namenode
     volumes:
       - ./shared/namenode1:/opt/hadoop/yarn_data/hdfs/namenode
-      - ./hadoop_config:/opt/hadoop/etc/hadoop
+      - ./shared/hadoop_config:/opt/hadoop/etc/hadoop
     networks:
       - hadoop-net
     ports:
@@ -20,7 +20,7 @@ services:
     hostname: datanode1
     volumes:
       - ./shared/datanode1:/opt/hadoop/yarn_data/hdfs/datanode
-      - ./hadoop_config:/opt/hadoop/etc/hadoop
+      - ./shared/hadoop_config:/opt/hadoop/etc/hadoop
     networks:
       - hadoop-net
 
@@ -30,7 +30,7 @@ services:
     hostname: datanode2
     volumes:
       - ./shared/datanode2:/opt/hadoop/yarn_data/hdfs/datanode
-      - ./hadoop_config:/opt/hadoop/etc/hadoop
+      - ./shared/hadoop_config:/opt/hadoop/etc/hadoop
     networks:
       - hadoop-net
 
