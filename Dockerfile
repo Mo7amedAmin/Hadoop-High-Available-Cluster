@@ -55,6 +55,16 @@ ENV HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
 ENV HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib"
 
 
+RUN wget https://downloads.apache.org/zookeeper/zookeeper-3.8.6/apache-zookeeper-3.8.6-bin.tar.gz \
+    && tar -xzvf apache-zookeeper-3.8.6-bin.tar.gz \
+    && mv apache-zookeeper-3.8.6-bin zookeeper
+
+
+ENV ZOOKEEPER_HOME=/opt/zookeeper
+ENV PATH=$PATH:$ZOOKEEPER_HOME/bin
+
+
+
 RUN mkdir -p /opt/hadoop/yarn_data/hdfs/namenode \
     && mkdir -p /opt/hadoop/yarn_data/hdfs/datanode \
     && mkdir -p /app/hadoop/tmp \
