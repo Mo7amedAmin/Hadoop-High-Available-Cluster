@@ -1,38 +1,93 @@
 version: '3.9'
 
 services:
-  namenode:
+  node01:
     build: .
-    container_name: namenode
-    hostname: namenode
+    container_name: node01
+    hostname: node01
     volumes:
-      - ./shared/namenode1:/opt/hadoop/yarn_data/hdfs/namenode
-      - ./shared/hadoop_config:/opt/hadoop/etc/hadoop
+      - ./shared/node01/namenode:/opt/hadoop/yarn_data/hdfs/namenode
+      - ./shared/conf/hadoop:/opt/hadoop/etc/hadoop
+      - ./shared/conf/zookeeper/zoo.cfg:/opt/zookeeper/conf/zoo.cfg
+      - ./shared/node01/zookeeper:/opt/zookeeper/data
     networks:
       - hadoop-net
     ports:
       - "9870:9870"   # HDFS NameNode UI
       - "8088:8088"   # YARN ResourceManager UI
+      - "2181:2181"   # Zookeeper UI
+  
 
-  datanode1:
+
+  node02:
     build: .
-    container_name: datanode1
-    hostname: datanode1
+    container_name: node02
+    hostname: node02
     volumes:
-      - ./shared/datanode1:/opt/hadoop/yarn_data/hdfs/datanode
-      - ./shared/hadoop_config:/opt/hadoop/etc/hadoop
+      - ./shared/node02/namenode:/opt/hadoop/yarn_data/hdfs/namenode
+      - ./shared/conf/hadoop:/opt/hadoop/etc/hadoop
+      - ./shared/conf/zookeeper/zoo.cfg:/opt/zookeeper/conf/zoo.cfg
+      - ./shared/node02/zookeeper:/opt/zookeeper/data
+      - ./shared/node02/journalnode:/opt/hadoop/journal
     networks:
       - hadoop-net
+    ports:
+      - "9871:9870"   # HDFS NameNode UI
+      - "8089:8088"   # YARN ResourceManager UI
+      - "2182:2181"   # Zookeeper 
+      - "8485:8485"   #Journal Node
 
-  datanode2:
+
+
+  node03:
     build: .
-    container_name: datanode2
-    hostname: datanode2
+    container_name: node03
+    hostname: node03
     volumes:
-      - ./shared/datanode2:/opt/hadoop/yarn_data/hdfs/datanode
-      - ./shared/hadoop_config:/opt/hadoop/etc/hadoop
+      - ./shared/node03/datanode:/opt/hadoop/yarn_data/hdfs/datanode
+      - ./shared/conf/hadoop:/opt/hadoop/etc/hadoop
+      - ./shared/conf/zookeeper/zoo.cfg:/opt/zookeeper/conf/zoo.cfg
+      - ./shared/node03/zookeeper:/opt/zookeeper/data
     networks:
       - hadoop-net
+    ports:
+      - "9864:9864"   # HDFS Datanode UI
+      - "8042:8042"  # NodeManager UI
+      - "2183:2181"   # Zookeeper 
+
+
+
+  node04:
+    build: .
+    container_name: node04
+    hostname: node04
+    volumes:
+      - ./shared/node04/datanode:/opt/hadoop/yarn_data/hdfs/datanode
+      - ./shared/conf/hadoop:/opt/hadoop/etc/hadoop
+      - ./shared/node04/journalnode:/opt/hadoop/journal
+    networks:
+      - hadoop-net
+    ports:
+      - "9865:9864"   # HDFS Datanode UI
+      - "8043:8042"  # NodeManager UI
+      - "8486:8485"   #Journal Node
+
+
+
+  node05:
+    build: .
+    container_name: node05
+    hostname: node05
+    volumes:
+      - ./shared/node05/datanode:/opt/hadoop/yarn_data/hdfs/datanode
+      - ./shared/conf/hadoop:/opt/hadoop/etc/hadoop
+      - ./shared/node05/journalnode:/opt/hadoop/journal
+    networks:
+      - hadoop-net
+    ports:
+      - "9866:9864"   # HDFS Datanode UI
+      - "8044:8042"  # NodeManager UI
+      - "8487:8485"   #Journal Node
 
 
 networks:
