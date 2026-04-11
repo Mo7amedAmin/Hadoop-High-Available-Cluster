@@ -8,15 +8,12 @@ services:
     volumes:
       - ./shared/node01/namenode:/opt/hadoop/yarn_data/hdfs/namenode
       - ./shared/conf/hadoop:/opt/hadoop/etc/hadoop
-      - ./shared/conf/zookeeper/zoo.cfg:/opt/zookeeper/conf/zoo.cfg
       - ./shared/node01/zookeeper:/opt/zookeeper/data
     networks:
       - hadoop-net
     ports:
       - "9870:9870"   # HDFS NameNode UI
       - "8088:8088"   # YARN ResourceManager UI
-      - "2181:2181"   # Zookeeper UI
-  
 
 
   node02:
@@ -26,7 +23,6 @@ services:
     volumes:
       - ./shared/node02/namenode:/opt/hadoop/yarn_data/hdfs/namenode
       - ./shared/conf/hadoop:/opt/hadoop/etc/hadoop
-      - ./shared/conf/zookeeper/zoo.cfg:/opt/zookeeper/conf/zoo.cfg
       - ./shared/node02/zookeeper:/opt/zookeeper/data
       - ./shared/node02/journalnode:/opt/hadoop/journal
     networks:
@@ -34,8 +30,6 @@ services:
     ports:
       - "9871:9870"   # HDFS NameNode UI
       - "8089:8088"   # YARN ResourceManager UI
-      - "2182:2181"   # Zookeeper 
-      - "8485:8485"   #Journal Node
 
 
 
@@ -46,14 +40,12 @@ services:
     volumes:
       - ./shared/node03/datanode:/opt/hadoop/yarn_data/hdfs/datanode
       - ./shared/conf/hadoop:/opt/hadoop/etc/hadoop
-      - ./shared/conf/zookeeper/zoo.cfg:/opt/zookeeper/conf/zoo.cfg
       - ./shared/node03/zookeeper:/opt/zookeeper/data
     networks:
       - hadoop-net
     ports:
       - "9864:9864"   # HDFS Datanode UI
       - "8042:8042"  # NodeManager UI
-      - "2183:2181"   # Zookeeper 
 
 
 
@@ -70,7 +62,6 @@ services:
     ports:
       - "9865:9864"   # HDFS Datanode UI
       - "8043:8042"  # NodeManager UI
-      - "8486:8485"   #Journal Node
 
 
 
@@ -87,7 +78,6 @@ services:
     ports:
       - "9866:9864"   # HDFS Datanode UI
       - "8044:8042"  # NodeManager UI
-      - "8487:8485"   #Journal Node
 
 
 networks:
