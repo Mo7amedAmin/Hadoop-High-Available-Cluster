@@ -11,7 +11,7 @@ This project demonstrates a **High Availability Hadoop Cluster** using:
 
 ## 📊 Architecture Diagram
 
-![Hadoop HA Architecture]("M:\SelfStudy\Data Engineering\Projects\High_available_hadoop_cluster\docs\images\HA_Diagram.svg")
+![Hadoop HA Architecture]("./docs/images/HA_Diagram.svg")
 
 ---
 
