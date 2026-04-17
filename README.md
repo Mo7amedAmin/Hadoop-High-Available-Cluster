@@ -1,106 +1,168 @@
-# 🚀 Hadoop High Availability (HA) Cluster | Docker-Based Big Data System
+# 🐘 Hadoop High Availability (HA) Cluster Architecture
 
-![Hadoop](https://img.shields.io/badge/Hadoop-3.3.x-orange)  
-![Docker](https://img.shields.io/badge/Docker-Containerized-blue)  
-![Zookeeper](https://img.shields.io/badge/Zookeeper-Coordination-green)  
-![HA](https://img.shields.io/badge/High%20Availability-Failover-red)  
-![Status](https://img.shields.io/badge/Status-Production--Simulated-success)
+This project demonstrates a **High Availability Hadoop Cluster** using:
 
-## 📌 Overview
-
-This project simulates a **production-grade Hadoop High Availability (HA) cluster** using Docker.
-
-It demonstrates:
-- Fault tolerance  
-- Automatic failover  
-- Data consistency  
-- Coordination using ZooKeeper  
+* HDFS HA (Active / Standby NameNode)
+* ZooKeeper Ensemble (Failover coordination)
+* JournalNodes Quorum (Shared edits)
+* Distributed Worker Nodes
 
 ---
 
-## 🏗️ Architecture Overview
+## 📊 Architecture Diagram
 
-```
-ZooKeeper Ensemble
------------------------------------------
-node01        node02        node03
-    \            |            /
-     \           |           /
-  Leader Election & Coordination
-                  |
------------------------------------------
-Active NN (node01)   Standby NN (node02)
-                  |
----- JournalNodes (QJM Layer) ----
-  node02      node04      node05
-                  |
-DataNodes + NodeManagers Layer
-  node03      node04      node05
-```
+![Hadoop HA Architecture]("M:\SelfStudy\Data Engineering\Projects\High_available_hadoop_cluster\docs\images\HA_Diagram.svg")
 
 ---
 
-## ⚙️ Core Features
+## 🧠 Architecture Overview
 
-- HDFS High Availability (Active/Standby NameNode)
-- Automatic Failover using ZKFC
-- ZooKeeper-based coordination
-- Quorum Journal Manager (QJM)
-- YARN distributed processing
-- Docker-based multi-node cluster
+The cluster is designed to ensure:
+
+* No single point of failure
+* Automatic failover
+* Consistent metadata replication
 
 ---
 
-## 🚀 Deployment
+## 🔷 Core Components
+
+### 1. NameNode (HA Setup)
+
+* **Active NameNode**
+
+  * Handles all client requests
+  * Writes edit logs
+
+* **Standby NameNode**
+
+  * Continuously syncs with Active
+  * Takes over automatically on failure
+
+---
+
+### 2. ZooKeeper Ensemble
+
+* Runs on:
+
+  * node01, node02, node03
+
+* Responsibilities:
+
+  * Leader election
+  * Failover coordination
+  * Ensuring only one Active NameNode
+
+---
+
+### 3. ZKFC (ZooKeeper Failover Controller)
+
+* Runs on both NameNodes
+* Communicates with ZooKeeper
+* Handles:
+
+  * Health checks
+  * Automatic failover
+
+---
+
+### 4. JournalNodes Quorum
+
+* Runs on:
+
+  * node02, node04, node05
+
+* Responsibilities:
+
+  * Store **edit logs**
+  * Maintain consistency using quorum (majority)
+
+---
+
+## 🔁 Edit Log Flow
+
+### Write Path (Active NameNode)
+
+1. Active NameNode writes edit logs
+2. Logs are sent to all JournalNodes
+3. Operation is successful when **majority (2/3)** acknowledges
+
+---
+
+### Read Path (Standby NameNode)
+
+1. Standby reads edit logs from JournalNodes
+2. Applies transactions in order
+3. Maintains up-to-date state
+
+---
+
+## 🔄 Failover Process
+
+1. Active NameNode fails
+2. ZKFC detects failure
+3. ZooKeeper elects a new Active
+4. Standby NameNode becomes Active
+5. Cluster continues without interruption
+
+---
+
+## 🗂️ Cluster Layout
+
+| Node   | Components                                                      |
+| ------ | --------------------------------------------------------------- |
+| node01 | Active NameNode, ResourceManager, ZKFC, ZooKeeper               |
+| node02 | Standby NameNode, ResourceManager, ZKFC, JournalNode, ZooKeeper |
+| node03 | DataNode, NodeManager, ZooKeeper                                |
+| node04 | DataNode, NodeManager, JournalNode                              |
+| node05 | DataNode, NodeManager, JournalNode                              |
+
+---
+
+## ⚙️ Initialization Flow (Simplified)
+
+* Start ZooKeeper Ensemble
+* Start JournalNodes
+* Format NameNode
+* Initialize shared edits:
 
 ```bash
-docker build -t hadoop-ha .
-docker compose up -d
-```
-
----
-
-## 🧩 Initial Setup
-
-### node01
-```bash
-hdfs namenode -format
 hdfs namenode -initializeSharedEdits
-hdfs zkfc -formatZK
 ```
 
-### node02
+* Bootstrap Standby:
+
 ```bash
 hdfs namenode -bootstrapStandby
 ```
 
----
-
-## 🧪 Failover Test
-
-```bash
-docker stop node01
-```
-
-```bash
-hdfs haadmin -getServiceState nn2
-```
-
-Expected:
-```
-active
-```
+* Start NameNodes + ZKFC
 
 ---
 
-## ⚠️ Notes
+## 🎯 Key Concepts
 
-- Run initializeSharedEdits only once
-- ZooKeeper must be ready before HDFS
-- Use persistent volumes
+* **High Availability (HA)**
+* **Quorum-based consistency**
+* **Leader election using ZooKeeper**
+* **Separation of metadata and storage**
 
 ---
 
-## 👨‍💻 Author
+## 📌 Notes
 
-Hadoop HA cluster project simulating real distributed systems.
+* This is a **pseudo-distributed cluster**
+* Some services are co-located for simplicity
+* Architecture reflects real production design principles
+
+---
+
+## 🧠 Summary
+
+> The Active NameNode writes metadata changes to a quorum of JournalNodes, while the Standby continuously syncs from them. ZooKeeper ensures safe failover by electing exactly one active node at any time.
+
+---
+
+## ⭐ Support
+
+If this helped you understand Hadoop HA, consider giving the repo a ⭐
