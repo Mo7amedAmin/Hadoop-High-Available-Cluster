@@ -133,7 +133,7 @@ It achieves this using:
 > **State**
 > node01 is Active and handling requests, while node02 is in Standby mode.
 
-<hr style="border: none; border-top: 1px solid #ccc; margin: 20px 0;">
+──────────────
 
 **Stop Active NameNode**
 
@@ -142,7 +142,7 @@ It achieves this using:
 > **Result**
 > After stopping node01, it becomes unreachable and node02 is automatically promoted to Active.
 
-<hr style="border: none; border-top: 1px solid #ccc; margin: 20px 0;">
+──────────────
 
 **After Restart NameNode**
 
@@ -165,7 +165,7 @@ It achieves this using:
 > **State**
 > node01 is Active and managing cluster resources, while node02 is in Standby mode.
 
-<hr style="border: none; border-top: 1px solid #ccc; margin: 20px 0;">
+──────────────
 
 **Stop Active ResourceManager**
 
@@ -174,7 +174,7 @@ It achieves this using:
 > **Result**
 > After stopping node01, it becomes unreachable and node02 is automatically promoted to Active.
 
-<hr style="border: none; border-top: 1px solid #ccc; margin: 20px 0;">
+──────────────
 
 **After Restart ResourceManager**
 
