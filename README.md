@@ -41,7 +41,7 @@ It achieves this using:
 ├── shared/
 │   ├── conf/hadoop/           # Hadoop configs (bind mounted)
 │   └── node*/                 # Persistent data (NameNode, DataNode, ZK)
-
+```
 ---
 
 ## 🔷 Core Components
