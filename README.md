@@ -26,6 +26,24 @@ It achieves this using:
 
 ---
 
+## 📁 Project Structure
+```bash
+.
+├── Dockerfile
+├── docker-compose.yml
+├── README.md
+├── startup.sh                 # Cluster startup script (runs automatically on container start)
+│
+├── docs/
+│   ├── troubleshooting.md     # Issues faced and solutions
+│   └── images/                # Architecture & failover screenshots
+│
+├── shared/
+│   ├── conf/hadoop/           # Hadoop configs (bind mounted)
+│   └── node*/                 # Persistent data (NameNode, DataNode, ZK)
+
+---
+
 ## 🔷 Core Components
 
 ### 1. HDFS - NameNode (HA)
@@ -107,21 +125,6 @@ It achieves this using:
 
 ---
 
-## 🔁 How It Works
-
-### HDFS
-
-* Active NameNode writes metadata changes to JournalNodes
-* Standby continuously reads and applies these changes
-
-### YARN
-
-* Active ResourceManager schedules jobs
-* NodeManagers execute tasks
-* Standby ResourceManager is ready for failover
-
----
-
 ## 🔄 Failover Verification
 
 ### HDFS (NameNode HA)
@@ -133,7 +136,7 @@ It achieves this using:
 > **State**
 > node01 is Active and handling requests, while node02 is in Standby mode.
 
-──────────────
+***
 
 **Stop Active NameNode**
 
@@ -142,7 +145,7 @@ It achieves this using:
 > **Result**
 > After stopping node01, it becomes unreachable and node02 is automatically promoted to Active.
 
-──────────────
+***
 
 **After Restart NameNode**
 
@@ -165,7 +168,7 @@ It achieves this using:
 > **State**
 > node01 is Active and managing cluster resources, while node02 is in Standby mode.
 
-──────────────
+***
 
 **Stop Active ResourceManager**
 
@@ -174,7 +177,7 @@ It achieves this using:
 > **Result**
 > After stopping node01, it becomes unreachable and node02 is automatically promoted to Active.
 
-──────────────
+***
 
 **After Restart ResourceManager**
 
@@ -207,17 +210,6 @@ It achieves this using:
 
 * **YARN UI**
   http://127.0.0.1:8088
-
-> ⚠️ On WSL use `127.0.0.1` instead of `localhost`
-
----
-
-## 📌 Key Concepts
-
-* High Availability across **Storage & Compute layers**
-* Quorum-based consistency
-* ZooKeeper-based coordination
-* Separation of concerns (HDFS vs YARN)
 
 ---
 
