@@ -8,7 +8,7 @@ service ssh start
 
 # Wait until DNS is ready
 for host in node01 node02 node03 node04 node05; do 
-    until getent hosts $host > /dev/null; do 
+    until getent hosts $host &>/dev/null; do 
         echo "waiting for $host..."
         sleep 2
     done
@@ -25,6 +25,7 @@ echo "syncLimit=2" >> /opt/zookeeper/conf/zoo.cfg
 echo "server.1=node01:2888:3888" >> /opt/zookeeper/conf/zoo.cfg
 echo "server.2=node02:2888:3888" >> /opt/zookeeper/conf/zoo.cfg
 echo "server.3=node03:2888:3888" >> /opt/zookeeper/conf/zoo.cfg
+echo "4lw.commands.whitelist=ruok" >> /opt/zookeeper/conf/zoo.cfg
 
 # Config myid files for zookeeper
 mkdir -p /opt/zookeeper/data
@@ -45,13 +46,13 @@ esac
 
 # Check Zookeeper Nodes are ready
 for host in node01 node02 node03; do
-    until nc -z $host 2181; do
+    until echo ruok | nc $host 2181 2>/dev/null | grep imok &>/dev/null; do
         echo "Waiting for Zookeeper on $host..."
         sleep 2
     done
+    echo "Zookeeper is ready on $host"
 done
 
-echo "Zookeeper is ready"
 
 
 # Start Journalnodes
@@ -64,26 +65,29 @@ esac
 
 # Check JournalNodes are ready
 for host in node02 node04 node05; do
-    until nc -z $host 8485; do
+    until nc -z $host 8485 &>/dev/null; do
         echo "Waiting for JournalNode on host $host..."
         sleep 2
     done
+    echo "JournalNode is ready on $host"
 done
-
-echo "All JournalNodes are ready"
 
 
 
 # Format and start NameNode and format zookeeper
 if [[ "$HOSTNAME" == node01 ]]; then
     # Format NameNode once
-    if [[ ! -f /opt/hadoop/yarn_data/hdfs/namenode/current/VERSION ]]; then
+    if [[ -f /opt/hadoop/yarn_data/hdfs/namenode/current/VERSION ]]; then
+        echo "NameNode is already formatted"
+    else
         echo "format namenode on $HOSTNAME..."
         hdfs namenode -format
     fi
 
     # Initalize shared edits 
-    if [[ ! -f /opt/hadoop/yarn_data/hdfs/namenode/.shared_edit_initialized ]]; then
+    if [[ -f /opt/hadoop/yarn_data/hdfs/namenode/.shared_edit_initialized ]]; then
+        echo "Shared edits is already initialized"
+    else
         echo "Initalizing shared edits..."
         hdfs namenode -initializeSharedEdits -force
         touch /opt/hadoop/yarn_data/hdfs/namenode/.shared_edit_initialized
@@ -110,8 +114,8 @@ fi
 
 if [[ "$HOSTNAME" == node02 ]]; then
     # Check active namenode
-    until nc -z node01 8020; do
-        echo "checking active NameNode..."
+    until hdfs haadmin -getServiceState nn1 | grep active &>/dev/null; do
+        echo "Waiting for active NameNode..."
         sleep 2
     done
 
@@ -157,6 +161,13 @@ esac
 
 echo "All services are ready on $HOSTNAME"
 
-trap "echo 'Stopping NameNode...'; hdfs --daemon stop namenode; sleep 10" SIGTERM
+# Gracefully stop all Hadoop services on container shutdown
+trap "
+echo 'Stopping services...'
+hdfs --daemon stop namenode 2>/dev/null
+yarn --daemon stop resourcemanager 2>/dev/null
+sleep 5
+" SIGTERM
 
+# Keep container running indefinitely
 tail -f /dev/null 
