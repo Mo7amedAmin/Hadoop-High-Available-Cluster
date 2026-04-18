@@ -45,7 +45,7 @@ services:
       - hadoop-net
     ports:
       - "9864:9864"   # HDFS Datanode UI
-      - "8042:8042"  # NodeManager UI
+      - "8042:8042"   # NodeManager UI
 
 
 
@@ -61,7 +61,7 @@ services:
       - hadoop-net
     ports:
       - "9865:9864"   # HDFS Datanode UI
-      - "8043:8042"  # NodeManager UI
+      - "8043:8042"   # NodeManager UI
 
 
 
@@ -77,7 +77,7 @@ services:
       - hadoop-net
     ports:
       - "9866:9864"   # HDFS Datanode UI
-      - "8044:8042"  # NodeManager UI
+      - "8044:8042"   # NodeManager UI
 
 
 networks:
