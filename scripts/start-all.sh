@@ -83,10 +83,10 @@ if [[ "$HOSTNAME" == node01 ]]; then
     fi
 
     # Initalize shared edits 
-    if [[ ! -f /opt/hadoop/.shared_edit_initialized ]]; then
+    if [[ ! -f /opt/hadoop/yarn_data/hdfs/namenode/.shared_edit_initialized ]]; then
         echo "Initalizing shared edits..."
         hdfs namenode -initializeSharedEdits -force
-        touch /opt/hadoop/.shared_edit_initialized
+        touch /opt/hadoop/yarn_data/hdfs/namenode/.shared_edit_initialized
     fi
 
     # Starting Active NameNode
@@ -94,8 +94,12 @@ if [[ "$HOSTNAME" == node01 ]]; then
     hdfs --daemon start namenode
 
     # Formatting Zookeeper
-    echo "Formatting Zookeeper on $HOSTNAME..."
-    hdfs zkfc -formatZK
+    if zkCli.sh -server node01:2181 ls /hadoop-ha/mycluster &>/dev/null; then
+        echo "ZK already initialized"
+    else
+        echo "Formatting Zookeeper on $HOSTNAME..."
+        hdfs zkfc -formatZK
+    fi
 
     # Start ZKFC (active)
     echo "Starting ZKFC for active NN on $HOSTNAME..."
@@ -152,5 +156,7 @@ case "$HOSTNAME" in
 esac
 
 echo "All services are ready on $HOSTNAME"
+
+trap "echo 'Stopping NameNode...'; hdfs --daemon stop namenode; sleep 10" SIGTERM
 
 tail -f /dev/null 
