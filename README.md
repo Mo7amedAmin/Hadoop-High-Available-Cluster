@@ -130,30 +130,27 @@ It achieves this using:
 
 ![Before](docs/images/NN_before.png)
 
-> node01 is Active and handling requests, while node02 is in Standby mode.
-
----
+**State:**
+node01 is Active and handling requests, while node02 is in Standby mode.
 
 **Stop Active NameNode**
 
 ![Failure](docs/images/NN_after.png)
 
-> After stopping node01, it becomes unreachable and node02 is automatically promoted to Active.
-
----
+**Result:**
+After stopping node01, it becomes unreachable and node02 is automatically promoted to Active.
 
 **After Restart NameNode**
 
 ![After](docs/images/NN_restart.png)
 
-> node01 rejoins the cluster as Standby, while node02 remains Active.
+**State:**
+node01 rejoins the cluster as Standby, while node02 remains Active.
+
+**Conclusion:**
+This demonstrates automatic failover and recovery in the HDFS HA setup.
 
 ---
-
-> This demonstrates automatic failover and recovery in the HDFS HA setup.
-
----
-
 
 ### YARN (ResourceManager HA)
 
@@ -165,17 +162,15 @@ yarn rmadmin -getAllServiceState
 
 ![Before](docs/images/RM_before.png)
 
-> node01 is Active and managing cluster resources, while node02 is in Standby mode.
-
----
+**State:**
+node01 is Active and managing cluster resources, while node02 is in Standby mode.
 
 **Stop Active ResourceManager**
 
 ![Failure](docs/images/RM_after.png)
 
-> After stopping node01, it becomes unreachable and node02 is automatically promoted to Active.
-
----
+**Result:**
+After stopping node01, it becomes unreachable and node02 is automatically promoted to Active.
 
 **After Restart ResourceManager**
 
@@ -185,11 +180,11 @@ yarn rmadmin -getAllServiceState
 
 ![After](docs/images/RM_restart.png)
 
-> node01 rejoins as Standby, while node02 remains Active.
+**State:**
+node01 rejoins as Standby, while node02 remains Active.
 
----
-
-> This confirms automatic failover and recovery in the YARN HA setup.
+**Conclusion:**
+This confirms automatic failover and recovery in the YARN HA setup.
 
 
 ---
@@ -205,29 +200,6 @@ yarn rmadmin -getAllServiceState
 
 ---
 
-## 🔍 High Availability Verification
-
-### HDFS (NameNode)
-
-```id="ha1"
-node01 → Active  
-node02 → Standby  
-```
-
-📸 *Add screenshot here*
-
----
-
-### YARN (ResourceManager)
-
-```id="ha2"
-rm1 → Active  
-rm2 → Standby  
-```
-
-📸 *Add screenshot here*
-
----
 
 ## 🌐 Access
 
