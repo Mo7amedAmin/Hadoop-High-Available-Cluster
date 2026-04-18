@@ -162,12 +162,16 @@ esac
 echo "All services are ready on $HOSTNAME"
 
 # Gracefully stop all Hadoop services on container shutdown
-trap "
-echo 'Stopping services...'
-hdfs --daemon stop namenode 2>/dev/null
-yarn --daemon stop resourcemanager 2>/dev/null
-sleep 5
-" SIGTERM
+case "$HOSTNAME" in
+    node01|node02)
+        trap "
+        echo 'Stopping services on $HOSTNAME...'
+        hdfs --daemon stop namenode 2>/dev/null
+        yarn --daemon stop resourcemanager 2>/dev/null
+        sleep 5
+        " SIGTERM
+    ;;
+esac
 
 # Keep container running indefinitely
 tail -f /dev/null 
