@@ -1,168 +1,273 @@
-# 🐘 Hadoop High Availability (HA) Cluster Architecture
+# 🐘 Hadoop High Availability (HA) Cluster
 
-This project demonstrates a **High Availability Hadoop Cluster** using:
-
-* HDFS HA (Active / Standby NameNode)
-* ZooKeeper Ensemble (Failover coordination)
-* JournalNodes Quorum (Shared edits)
-* Distributed Worker Nodes
+This project demonstrates a **High Availability Hadoop Cluster** running on **WSL + Docker**.
 
 ---
 
-## 📊 Architecture Diagram
+## 📊 Architecture
 
-![Hadoop HA Architecture](/docs/images/HA_Diagram.svg)
+![Hadoop HA Architecture](docs/images/HA_Diagram.svg)
 
 ---
 
-## 🧠 Architecture Overview
+## 🧠 Overview
 
-The cluster is designed to ensure:
+The cluster is designed to eliminate single points of failure across both:
 
-* No single point of failure
-* Automatic failover
-* Consistent metadata replication
+* **HDFS (Storage Layer)**
+* **YARN (Resource Management Layer)**
+
+It achieves this using:
+
+* Active / Standby NameNodes
+* Active / Standby ResourceManagers
+* ZooKeeper-based failover
+* JournalNodes quorum for consistency
 
 ---
 
 ## 🔷 Core Components
 
-### 1. NameNode (HA Setup)
+### 1. HDFS - NameNode (HA)
 
 * **Active NameNode**
 
-  * Handles all client requests
-  * Writes edit logs
+  * Handles all client metadata operations
+  * Writes edit logs to JournalNodes
 
 * **Standby NameNode**
 
-  * Continuously syncs with Active
-  * Takes over automatically on failure
+  * Continuously syncs from JournalNodes
+  * Automatically takes over on failure
 
 ---
 
-### 2. ZooKeeper Ensemble
+### 2. YARN - ResourceManager (HA)
 
-* Runs on:
+* **Active ResourceManager**
 
-  * node01, node02, node03
+  * Handles scheduling and resource allocation
+  * Communicates with NodeManagers
 
-* Responsibilities:
+* **Standby ResourceManager**
+
+  * Remains in sync and ready for failover
+  * Takes over automatically if Active fails
+
+* Failover is coordinated using **ZooKeeper**
+
+---
+
+### 3. ZooKeeper Ensemble
+
+* Runs on 3 nodes (node01, node02, node03)
+* Responsible for:
 
   * Leader election
   * Failover coordination
-  * Ensuring only one Active NameNode
+  * Preventing split-brain scenarios
 
 ---
 
-### 3. ZKFC (ZooKeeper Failover Controller)
+### 4. ZK Failover Controller (ZKFC)
 
 * Runs on both NameNodes
+* Monitors health and triggers failover
 * Communicates with ZooKeeper
-* Handles:
-
-  * Health checks
-  * Automatic failover
 
 ---
 
-### 4. JournalNodes Quorum
+### 5. JournalNodes
 
-* Runs on:
-
-  * node02, node04, node05
-
-* Responsibilities:
-
-  * Store **edit logs**
-  * Maintain consistency using quorum (majority)
+* Store HDFS edit logs
+* Use quorum-based writes (majority required)
+* Ensure consistency between NameNodes
 
 ---
 
-## 🔁 Edit Log Flow
+### 6. Worker Nodes
 
-### Write Path (Active NameNode)
-
-1. Active NameNode writes edit logs
-2. Logs are sent to all JournalNodes
-3. Operation is successful when **majority (2/3)** acknowledges
+* **DataNodes** → store actual data blocks
+* **NodeManagers** → execute YARN containers
 
 ---
 
-### Read Path (Standby NameNode)
+## ⚙️ Startup Flow
 
-1. Standby reads edit logs from JournalNodes
-2. Applies transactions in order
-3. Maintains up-to-date state
-
----
-
-## 🔄 Failover Process
-
-1. Active NameNode fails
-2. ZKFC detects failure
-3. ZooKeeper elects a new Active
-4. Standby NameNode becomes Active
-5. Cluster continues without interruption
+1. Start ZooKeeper Ensemble
+2. Start JournalNodes
+3. Initialize NameNode (format)
+4. Initialize shared edits
+5. Bootstrap Standby NameNode
+6. Start NameNodes (Active / Standby)
+7. Start ZK Failover Controllers (ZKFC)
+8. Start DataNodes
+9. Start ResourceManagers (HA)
+10. Start NodeManagers
 
 ---
 
+## 🔁 How It Works
+
+### HDFS
+
+* Active NameNode writes metadata changes to JournalNodes
+* Standby continuously reads and applies these changes
+
+### YARN
+
+* Active ResourceManager schedules jobs
+* NodeManagers execute tasks
+* Standby ResourceManager is ready for failover
+
+---
+
+## 🔄 Failover Verification
+
+### HDFS (NameNode HA)
+
+**Before Failure**
+
+![Before](docs/images/NN_before.png)
+
+> node01 is Active and handling requests, while node02 is in Standby mode.
+
+---
+
+**Stop Active NameNode**
+
+![Failure](docs/images/NN_after.png)
+
+> After stopping node01, it becomes unreachable and node02 is automatically promoted to Active.
+
+---
+
+**After Restart NameNode**
+
+![After](docs/images/NN_restart.png)
+
+> node01 rejoins the cluster as Standby, while node02 remains Active.
+
+---
+
+> This demonstrates automatic failover and recovery in the HDFS HA setup.
+
+---
+
+
+### YARN (ResourceManager HA)
+
+**Before Failure**
+
+```bash
+yarn rmadmin -getAllServiceState
+```
+
+![Before](docs/images/RM_before.png)
+
+> node01 is Active and managing cluster resources, while node02 is in Standby mode.
+
+---
+
+**Stop Active ResourceManager**
+
+![Failure](docs/images/RM_after.png)
+
+> After stopping node01, it becomes unreachable and node02 is automatically promoted to Active.
+
+---
+
+**After Restart ResourceManager**
+
+```bash
+yarn rmadmin -getAllServiceState
+```
+
+![After](docs/images/RM_restart.png)
+
+> node01 rejoins as Standby, while node02 remains Active.
+
+---
+
+> This confirms automatic failover and recovery in the YARN HA setup.
+
+
+---
 ## 🗂️ Cluster Layout
 
-| Node   | Components                                                      |
-| ------ | --------------------------------------------------------------- |
-| node01 | Active NameNode, ResourceManager, ZKFC, ZooKeeper               |
-| node02 | Standby NameNode, ResourceManager, ZKFC, JournalNode, ZooKeeper |
-| node03 | DataNode, NodeManager, ZooKeeper                                |
-| node04 | DataNode, NodeManager, JournalNode                              |
-| node05 | DataNode, NodeManager, JournalNode                              |
+| Node   | Components                                              |
+| ------ | ------------------------------------------------------- |
+| node01 | NameNode, ResourceManager, ZKFC, ZooKeeper              |
+| node02 | NameNode, ResourceManager, ZKFC, JournalNode, ZooKeeper |
+| node03 | DataNode, NodeManager, ZooKeeper                        |
+| node04 | DataNode, NodeManager, JournalNode                      |
+| node05 | DataNode, NodeManager, JournalNode                      |
 
 ---
 
-## ⚙️ Initialization Flow (Simplified)
+## 🔍 High Availability Verification
 
-* Start ZooKeeper Ensemble
-* Start JournalNodes
-* Format NameNode
-* Initialize shared edits:
+### HDFS (NameNode)
 
-```bash
-hdfs namenode -initializeSharedEdits
+```id="ha1"
+node01 → Active  
+node02 → Standby  
 ```
 
-* Bootstrap Standby:
+📸 *Add screenshot here*
 
-```bash
-hdfs namenode -bootstrapStandby
+---
+
+### YARN (ResourceManager)
+
+```id="ha2"
+rm1 → Active  
+rm2 → Standby  
 ```
 
-* Start NameNodes + ZKFC
+📸 *Add screenshot here*
 
 ---
 
-## 🎯 Key Concepts
+## 🌐 Access
 
-* **High Availability (HA)**
-* **Quorum-based consistency**
-* **Leader election using ZooKeeper**
-* **Separation of metadata and storage**
+* **HDFS UI**
+  http://127.0.0.1:9870
+
+* **YARN UI**
+  http://127.0.0.1:8088
+
+> ⚠️ On WSL use `127.0.0.1` instead of `localhost`
 
 ---
 
-## 📌 Notes
+## 📌 Key Concepts
 
-* This is a **pseudo-distributed cluster**
-* Some services are co-located for simplicity
-* Architecture reflects real production design principles
+* High Availability across **Storage & Compute layers**
+* Quorum-based consistency
+* ZooKeeper-based coordination
+* Separation of concerns (HDFS vs YARN)
 
 ---
 
 ## 🧠 Summary
 
-> The Active NameNode writes metadata changes to a quorum of JournalNodes, while the Standby continuously syncs from them. ZooKeeper ensures safe failover by electing exactly one active node at any time.
+> This cluster achieves full high availability by combining HDFS HA (Active/Standby NameNodes) with YARN HA (Active/Standby ResourceManagers), coordinated via ZooKeeper and backed by a quorum-based JournalNode system.
 
 ---
+## 📚 Resources
 
-## ⭐ Support
+- [HDFS High Availability Guide](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithQJM.html)
 
-If this helped you understand Hadoop HA, consider giving the repo a ⭐
+- [YARN ResourceManager High Availability](https://hadoop.apache.org/docs/stable/hadoop-yarn/hadoop-yarn-site/ResourceManagerHA.html)
+
+- [ZooKeeper Documentation](https://zookeeper.apache.org/doc/current/)
+
+- [Hadoop Architecture Overview](https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-common/ClusterSetup.html)
+
+- [Hadoop Learning Series](https://www.youtube.com/watch?v=3PAl0y067Ag&list=PLrooD4hY1QqAK5pbBpcthLuMa-cXnXJLE)
+---
+
+## ⭐
+
+If this project helped you, consider giving it a star ⭐
