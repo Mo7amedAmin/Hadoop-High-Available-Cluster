@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
 # Set JAVA_HOME and simplify Java path
 RUN mv /usr/lib/jvm/java-11-openjdk-amd64 /usr/lib/jvm/java
 
+# Set Java environment variables
 ENV JAVA_HOME=/usr/lib/jvm/java
 ENV PATH=$JAVA_HOME/bin:$PATH
 
@@ -67,8 +68,8 @@ RUN mkdir -p /opt/hadoop/yarn_data/hdfs/namenode \
 
 
 # Copy startup script and make it executable
-COPY scripts/start-all.sh /start-all.sh
-RUN chmod +x /start-all.sh
+COPY startup.sh /startup.sh
+RUN chmod +x /startup.sh
 
 # Start all Hadoop services when container runs
-ENTRYPOINT ["/start-all.sh"]
+ENTRYPOINT ["/startup.sh"]
