@@ -221,6 +221,12 @@ It achieves this using:
 
 ---
 
+## 📚 Troubleshooting
+See detailed issues and fixes here:
+[docs/troubleshooting.md](docs/troubleshooting.md)
+
+---
+
 ## 🧠 Summary
 
 > This cluster achieves full high availability by combining HDFS HA (Active/Standby NameNodes) with YARN HA (Active/Standby ResourceManagers), coordinated via ZooKeeper and backed by a quorum-based JournalNode system.
