@@ -102,7 +102,29 @@ fi
 
 ---
 
-## 5. ZooKeeper `myid` issue (WSL)
+## 5. Shared edits initialization re-running
+
+**Issue:**
+`initializeSharedEdits` was being executed multiple times after restarting containers, causing crashes.
+
+**Cause:**
+The check was based on a file that was not persisted. When containers restarted, the file was lost, so the system assumed initialization hadn’t been done and tried to run it again.
+
+**Fix:**
+Added a persistent check file stored in mounted storage:
+
+```bash
+if [[ ! -f /opt/hadoop/yarn_data/hdfs/namenode/.shared_edit_initialized ]]; then
+  hdfs namenode -initializeSharedEdits -force
+  touch /opt/hadoop/yarn_data/hdfs/namenode/.shared_edit_initialized
+fi
+```
+
+This ensures initialization runs only once and survives container restarts.
+
+---
+
+## 6. ZooKeeper `myid` issue (WSL)
 
 **Issue:**
 ZooKeeper couldn't read `myid` file properly on WSL.
@@ -115,7 +137,26 @@ echo "1" > /opt/zookeeper/data/myid
 
 ---
 
-## 6. Failover not triggering
+## 7. Failover failing with SSH fencing
+
+**Issue:**
+Failover was not completing when testing by stopping the NameNode manually.
+
+**Cause:**
+SSH-based fencing was failing. When the NameNode was already down, the fencing command returned a non-zero exit code, so Hadoop blocked the failover.
+
+**Fix:**
+Used a shell-based fencing method during testing:
+
+```bash
+<value>shell(/bin/true)</value>
+```
+
+This ensured the fencing step always returned success, allowing failover to proceed.
+
+---
+
+## 8. Failover not triggering
 
 **Issue:**
 Failover didn't happen when running:
@@ -139,7 +180,7 @@ yarn --daemon stop resourcemanager
 
 ---
 
-## 7. ZooKeeper `ruok` not working
+## 9. ZooKeeper `ruok` not working
 
 **Issue:**
 ZooKeeper was not responding to:
